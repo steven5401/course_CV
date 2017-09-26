@@ -33,3 +33,7 @@
 
 # Any in build folder
 **/build/*
+
+# Miscellaneous
+*.docx
+*.rar
