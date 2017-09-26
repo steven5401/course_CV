@@ -31,8 +31,9 @@
 *.out
 *.app
 
-# Any in build folder
+# Any in these folder
 **/build/*
+**/report/*
 
 # Miscellaneous
 *.docx
