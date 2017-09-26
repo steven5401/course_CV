@@ -5,7 +5,7 @@ mkdir build && cd build
 cmake ..
 make
 ```
-Using g++
+Or using g++
 ```
-g++ --std=c++11 `pkg-config --cflags --libs opencv` main.cpp -o hw1
+g++ --std=c++11 `pkg-config --cflags --libs opencv` main.cpp -o hw2
 ```
