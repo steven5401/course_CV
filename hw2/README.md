@@ -7,5 +7,5 @@ make
 ```
 Using g++
 ```
-g++ main.cpp -o hw1 `pkg-config --cflags --libs opencv`
+g++ --std=c++11 `pkg-config --cflags --libs opencv` main.cpp -o hw1
 ```
