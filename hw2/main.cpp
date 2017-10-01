@@ -6,6 +6,12 @@
 #include <opencv2/opencv.hpp>
 using namespace std;
 using namespace cv;
+//#define DEBUG
+#ifdef DEBUG
+    #define D(x) cerr << x << endl
+#else
+    #define D(x)
+#endif
 
 int FindMinLabel(const Mat label, int i, int j, set<pair<int,int> >& equal_set) {
     int cols = label.cols, rows = label.rows;
@@ -36,15 +42,14 @@ int FindMinLabel(const Mat label, int i, int j, set<pair<int,int> >& equal_set) 
     }
 }
 
-Mat FindConnectComponent(const Mat src, int& component_count) {
+Mat FindConnectComponent(const Mat src, int& component_count, int threshold = 255) {
     component_count = 1;
     int cols = src.cols, rows = src.rows;
     Mat label(rows, cols, CV_16U, Scalar(0));
     set<pair<int,int> > equal_set;
-    imwrite("empty.bmp", label);
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
-            if (src.at<uchar>(i,j) == 255) {//need label
+            if (src.at<uchar>(i,j) >= threshold) {//need label
                 int min_label = FindMinLabel(label, i, j, equal_set);
                 if (min_label == INT_MAX) {//new component
                     label.at<unsigned short>(i,j) = component_count;
@@ -59,8 +64,9 @@ Mat FindConnectComponent(const Mat src, int& component_count) {
         component_count = 0;
         return label;
     }
-    int *equal_table = new int[component_count]();//equal_table[0] is dummy
-    for (int i = 0; i != component_count; i++) {
+    int equal_table_size = component_count;
+    int *equal_table = new int[equal_table_size]();//equal_table[0] is dummy
+    for (int i = 0; i != equal_table_size; i++) {
         equal_table[i] = i;
     }
     for (auto p : equal_set) {
@@ -68,7 +74,7 @@ Mat FindConnectComponent(const Mat src, int& component_count) {
         component_count--;
         int label_small = min(equal_table[p.first], equal_table[p.second]);
         int label_big = max(equal_table[p.first], equal_table[p.second]);
-        for (int i = 0; i != component_count; i++) {
+        for (int i = 0; i != equal_table_size; i++) {
             if (equal_table[i] == label_big) equal_table[i] = label_small;
         }
     }
@@ -79,6 +85,7 @@ Mat FindConnectComponent(const Mat src, int& component_count) {
                 label.at<unsigned short>(i,j) = equal_table[current_label];
         }
     }
+    delete [] equal_table;
     component_count--;//because we start at 1
     return label;
 }
@@ -107,15 +114,10 @@ int main(int argc, char** argv) {
         }
         imwrite("histogram.bmp", histogram_img);
         int component_count = 0;
-        Mat label = FindConnectComponent(img_gray, component_count);
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
-                if (i == 0)
-                    cout << label.at<unsigned short>(i,j) << ' ';
-            }
-        }
-        imwrite("debug.bmp", label);
+        Mat label = FindConnectComponent(img_gray, component_count, 1);
         int max_label = 0;
+        rows = label.rows;
+        cols = label.cols;
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
                 if (label.at<unsigned short>(i,j) > max_label) {
@@ -123,27 +125,32 @@ int main(int argc, char** argv) {
                 }
             }
         }
+        D("max label=" << max_label);
         vector<Point> *component_set = new vector<Point>[max_label + 1];
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
                 if (label.at<unsigned short>(i,j) != 0) {
-                    component_set[label.at<unsigned short>(i,j)].push_back(Point(i,j));
+                    component_set[label.at<unsigned short>(i,j)].push_back(Point(j,i));//due to image coordinate
                 }
             }
         }
         Mat components_img;
         cvtColor(img_gray, components_img, COLOR_GRAY2BGR);
-        for (int i = 0; i != max_label; i++) {//draw each bounding box
-            if (component_set[i].size() != 0) {
+        for (int i = 0; i != max_label + 1; i++) {//draw each bounding box
+            if (component_set[i].size() >= 500) {//ignore patch that is small than 500 pixels
                 Rect r = boundingRect(component_set[i]);
-                rectangle(components_img, r.tl(), r.br(), Scalar(255,0,0), 2, 8, 0);
+                rectangle(components_img, r.tl(), r.br() - Point(1,1), Scalar(255,0,0), 2, 8, 0);
                 Point center = (r.tl() + r.br()) / 2;
-                line(components_img, Point(center.x - 5, center.y), Point(center.x + 5, center.y), Scalar(255,0,0));
-                line(components_img, Point(center.x, center.y - 5), Point(center.x, center.y + 5), Scalar(255,0,0));
+                //line(components_img, Point(center.x - 5, center.y), Point(center.x + 5, center.y), Scalar(255,0,0));
+                //line(components_img, Point(center.x, center.y - 5), Point(center.x, center.y + 5), Scalar(255,0,0));
             }
         }
         imwrite("components.bmp", components_img);
     } else {
-        cout << "no such file:" << argv[1] << endl;
+        if (argc == 2) {
+            cout << "no such file:" << argv[1] << endl;
+        } else {
+            cout << "command line argument is missed" << endl;
+        }
     }
 }
