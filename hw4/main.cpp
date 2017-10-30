@@ -130,23 +130,46 @@ int main(int argc, char** argv) {
     }
     //dilation
     //structure element {(0,0), (-1,0), (0,-1), (1,0), (0,1)}
-    Mat dilation_structure(3, 3, CV_8UC1, Scalar(0));
+    /*Mat dilation_structure(3, 3, CV_8UC1, Scalar(0));
     dilation_structure.at<uchar>(0, 1) = 255;
     dilation_structure.at<uchar>(1, 0) = 255;
     dilation_structure.at<uchar>(1, 1) = 255;
     dilation_structure.at<uchar>(1, 2) = 255;
-    dilation_structure.at<uchar>(2, 1) = 255;
-    Mat dilation = Dilation(img_binary, dilation_structure, 1, 1);
+    dilation_structure.at<uchar>(2, 1) = 255;*/
+    Mat circle_structure(5, 5, CV_8UC1, Scalar(0));
+    circle_structure.at<uchar>(0, 1) = 255;
+    circle_structure.at<uchar>(0, 2) = 255;
+    circle_structure.at<uchar>(0, 3) = 255;
+    circle_structure.at<uchar>(1, 0) = 255;
+    circle_structure.at<uchar>(1, 1) = 255;
+    circle_structure.at<uchar>(1, 2) = 255;
+    circle_structure.at<uchar>(1, 3) = 255;
+    circle_structure.at<uchar>(1, 4) = 255;
+    circle_structure.at<uchar>(2, 0) = 255;
+    circle_structure.at<uchar>(2, 1) = 255;
+    circle_structure.at<uchar>(2, 2) = 255;
+    circle_structure.at<uchar>(2, 3) = 255;
+    circle_structure.at<uchar>(2, 4) = 255;
+    circle_structure.at<uchar>(3, 0) = 255;
+    circle_structure.at<uchar>(3, 1) = 255;
+    circle_structure.at<uchar>(3, 2) = 255;
+    circle_structure.at<uchar>(3, 3) = 255;
+    circle_structure.at<uchar>(3, 4) = 255;
+    circle_structure.at<uchar>(4, 1) = 255;
+    circle_structure.at<uchar>(4, 2) = 255;
+    circle_structure.at<uchar>(4, 3) = 255;
+
+    Mat dilation = Dilation(img_binary, circle_structure, 2, 2);
     imwrite("dilation.bmp", dilation);
     //erosion
     //structure element is same as dilation
-    Mat erosion = Erosion(img_binary, dilation_structure, 1, 1);
+    Mat erosion = Erosion(img_binary, circle_structure, 2, 2);
     imwrite("erosion.bmp", erosion);
     //opening
-    Mat opening = Dilation(Erosion(img_binary, dilation_structure, 1, 1), dilation_structure, 1, 1);
+    Mat opening = Dilation(Erosion(img_binary, circle_structure, 2, 2), circle_structure, 2, 2);
     imwrite("opening.bmp", opening);
     //closing
-    Mat closing = Erosion(Dilation(img_binary, dilation_structure, 1, 1), dilation_structure, 1, 1);
+    Mat closing = Erosion(Dilation(img_binary, circle_structure, 2, 2), circle_structure, 2, 2);
     imwrite("closing.bmp", closing);
     //hit-and-miss
     Mat structure(2, 2, CV_8UC1, Scalar(255));
