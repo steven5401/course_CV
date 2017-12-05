@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.2)
+set (CMAKE_CXX_STANDARD 11)
+project( hw8 )
+find_package( OpenCV REQUIRED )
+add_executable( hw8 main.cpp )
+target_link_libraries( hw8 ${OpenCV_LIBS} )
